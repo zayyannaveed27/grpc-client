@@ -13,13 +13,29 @@ class GreeterService(greet_pb2_grpc.GreeterServicer):
         return hello_reply
     
     def ParrotSaysHello(self, request, context):
-        return super().ParrotSaysHello(request, context)
+        print(f"ParrotSaysHello Request Made: {request}")
+        for i in range(3):
+            hello_reply = greet_pb2.HelloReply()
+            hello_reply.message = f"{request.greeting} {request.name} {i+1}"
+            yield hello_reply
+            time.sleep(3)
     
     def ChattyClientSaysHello(self, request_iterator, context):
-        return super().ChattyClientSaysHello(request_iterator, context)
+        
+        delayed_reply = greet_pb2.DelayedReply()
+        for request in request_iterator:
+            print("ChattyClientSaysHello Request Made:" + str(request))
+            delayed_reply.request.append(request)
+
+        delayed_reply.message = f"Hello you have sent {len(delayed_reply.request)} messages. Please expect a delayed reply."
+        return delayed_reply
     
     def InteractingHello(self, request_iterator, context):
-        return super().InteractingHello(request_iterator, context)
+        for request in request_iterator:
+            print(f"InteractingHello Request Made: {request}")
+            hello_reply = greet_pb2.HelloReply()
+            hello_reply.message = f"{request.greeting} {request.name}"
+            yield hello_reply
     
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
